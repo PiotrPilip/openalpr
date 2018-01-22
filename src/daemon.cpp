@@ -22,6 +22,7 @@
 #include <log4cplus/consoleappender.h>
 #include <log4cplus/fileappender.h>
 
+#include <memory>
 using namespace alpr;
 
 // Variables
@@ -146,7 +147,10 @@ int main( int argc, const char** argv )
   
   log4cplus::BasicConfigurator config;
   config.configure();
-    
+  
+  log4cplus::tstring l4pattern = LOG4CPLUS_TEXT("%D uptime:%r pid:%i %m ");
+   
+
   if (noDaemon == false)
   {
     // Fork off into a separate daemon
@@ -155,6 +159,7 @@ int main( int argc, const char** argv )
     
     log4cplus::SharedAppenderPtr myAppender(new log4cplus::RollingFileAppender(logFile));
     myAppender->setName("alprd_appender");
+    myAppender->setLayout( std::auto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(l4pattern)) );
     // Redirect std out to log file
     logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("alprd"));
     logger.addAppender(myAppender);
@@ -164,11 +169,12 @@ int main( int argc, const char** argv )
   }
   else
   {
-    //log4cplus::SharedAppenderPtr myAppender(new log4cplus::ConsoleAppender());
-    //myAppender->setName("alprd_appender");
+    log4cplus::SharedAppenderPtr myAppender(new log4cplus::ConsoleAppender());
+    myAppender->setName("alprd_appender");
     // Redirect std out to log file
     logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("alprd"));
-    //logger.addAppender(myAppender);
+    myAppender->setLayout( std::auto_ptr<log4cplus::Layout>(new log4cplus::PatternLayout(l4pattern)) );
+    logger.addAppender(myAppender);
     
     LOG4CPLUS_INFO(logger, "Running OpenALPR daemon in the foreground.");
   }
